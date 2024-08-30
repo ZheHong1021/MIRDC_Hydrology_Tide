@@ -1,7 +1,10 @@
 from config.DB import DB
-
+import os
+from utils.load_env import load_env
 from logs.logger import setup_logger
 
+# 加載 .env 文件中的環境變數
+load_env()
 # 設定 logger
 logger = setup_logger()
 
@@ -40,7 +43,7 @@ class Query:
                 """
 
                 cursor.execute(sql,
-                    (station_id, "Tide", station_name)
+                    (station_id, os.environ.get('STATION_TYPE_NAME', 'TideStation'), station_name)
                 )
 
                 self.connection.commit()
