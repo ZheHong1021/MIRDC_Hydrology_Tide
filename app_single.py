@@ -86,9 +86,6 @@ if __name__ == "__main__":
             # 取得這個站點有數據的measure_time
             measure_times = query.selectTideLevelMeasureTime(station_id)
             
-
-            # 新增的數據(batch)
-            create_datas = list()
             
             # 開始進行資料庫寫入
             for _, row in df.iterrows():
@@ -103,15 +100,10 @@ if __name__ == "__main__":
                 if measure_time in measure_times:
                     continue # 存在就不用繼續了
 
+                # 新增潮高資料
+                new_id = query.insertTideLevel(station_id, measure_time, level)
+                # if new_id:
+                #     print(f'✅ 新增[{station_id}-{station_name}]潮高資料: 成功 =>({new_id})')
 
-                # 儲存要新增的數據
-                create_datas.append((station_id, measure_time, level))
-
-
-
-            # 如果有新增的數據
-            if create_datas:
-                query.batchInsertTideLevels(station_id, create_datas)
-                print(f'✅ 新增 {len(create_datas)} 筆潮高資料成功')
 
             bar()

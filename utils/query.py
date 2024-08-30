@@ -40,6 +40,24 @@ class Query:
         
             except Exception as e:
                 print(f' ⛔ 新增至資料庫中時發生錯誤: {e}')
+
+
+    # 取得這個站點有數據的measure_time
+    def selectTideLevelMeasureTime(self, station_id):
+        with self.connection.cursor() as cursor:
+            try:
+                cursor.execute(
+                    """
+                        SELECT `measure_time` FROM `water_external_measure_tide_level` 
+                            WHERE `station_id` = %s;
+                    """, 
+                    station_id,
+                )
+                rows = cursor.fetchall() # 捕捉多的，因為有不確定的可能
+                # 取得 measure_time列表(flat)
+                return [row['measure_time'] for row in rows] or list()
+            except Exception as e:
+                print(f'⛔ 查詢 [water_external_measure_tide_level]資料庫時發生錯誤: {e}')
     
 
     # 尋找是否有潮高資料
@@ -48,7 +66,7 @@ class Query:
             try:
                 cursor.execute(
                     """
-                        SELECT * FROM `water_external_measure_tide_level` 
+                        SELECT `id` FROM `water_external_measure_tide_level` 
                             WHERE `station_id` = %s AND `measure_time` = %s;
                     """, 
                     (station_id, measure_time),
@@ -77,3 +95,21 @@ class Query:
         
             except Exception as e:
                 print(f'⛔ 新增至資料庫中時發生錯誤: {e} ({measure_time} => {level})')
+
+    # 批次新增潮高資料
+    def batchInsertTideLevels(self, station_id, data):
+        with self.connection.cursor() as cursor:
+            try:
+                sql = """
+                    INSERT INTO water_external_measure_tide_level 
+                    (`station_id`, `measure_time`, `level`) 
+                    VALUES (%s, %s, %s);
+                """
+
+                cursor.executemany(sql, data)
+
+                self.connection.commit()
+                return cursor.lastrowid
+        
+            except Exception as e:
+                print(f'⛔ 新增至資料庫中時發生錯誤: {e}')
