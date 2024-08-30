@@ -59,7 +59,7 @@ class Query:
             try:
                 cursor.execute(
                     """
-                        SELECT `measure_time` FROM `water_external_measure_tide_level` 
+                        SELECT `measure_time` FROM `water_external_measure_tide_station_data` 
                             WHERE `station_id` = %s AND YEAR(`measure_time`) = %s;
                     """, 
                     (station_id, year,)
@@ -68,7 +68,7 @@ class Query:
                 # 取得 measure_time列表(flat)
                 return [row['measure_time'] for row in rows] or list()
             except Exception as e:
-                logger.error(f'⛔ 查詢 [water_external_measure_tide_level]日期資料庫時發生錯誤: {e}')
+                logger.error(f'⛔ 查詢 [water_external_measure_tide_station_data]日期資料庫時發生錯誤: {e}')
     
 
     # 尋找是否有潮高資料
@@ -77,7 +77,7 @@ class Query:
             try:
                 cursor.execute(
                     """
-                        SELECT `id` FROM `water_external_measure_tide_level` 
+                        SELECT `id` FROM `water_external_measure_tide_station_data` 
                             WHERE `station_id` = %s AND `measure_time` = %s;
                     """, 
                     (station_id, measure_time),
@@ -85,14 +85,14 @@ class Query:
                 rows = cursor.fetchall() # 捕捉多的，因為有不確定的可能
                 return rows or None
             except Exception as e:
-                logger.error(f'⛔ 查詢 [water_external_measure_tide_level]資料庫時發生錯誤: {e}')
+                logger.error(f'⛔ 查詢 [water_external_measure_tide_station_data]資料庫時發生錯誤: {e}')
     
     # 新增潮高資料
     def insertTideLevel(self, station_id, measure_time, level):
         with self.connection.cursor() as cursor:
             try:
                 sql = """
-                    INSERT INTO water_external_measure_tide_level 
+                    INSERT INTO water_external_measure_tide_station_data 
                     (`station_id`, `measure_time`, `level`) 
                     VALUES (%s, %s, %s);
                 """
@@ -112,7 +112,7 @@ class Query:
         with self.connection.cursor() as cursor:
             try:
                 sql = """
-                    INSERT INTO water_external_measure_tide_level 
+                    INSERT INTO water_external_measure_tide_station_data 
                     (`station_id`, `measure_time`, `level`) 
                     VALUES (%s, %s, %s);
                 """
