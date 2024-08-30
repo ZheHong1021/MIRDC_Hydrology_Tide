@@ -4,6 +4,10 @@ from utils.query import Query
 from utils.load_env import load_env
 from utils.load_stations import load_stations
 from alive_progress import alive_bar
+from logs.logger import setup_logger
+
+# 設定 logger
+logger = setup_logger()
 
 
 if __name__ == "__main__":
@@ -53,7 +57,7 @@ if __name__ == "__main__":
             # 取得新的站點ID
             station = stations_hash_map.get(str(old_station_id), None)
             if station is None:
-                print(f"⛔ 找不到站點ID: {old_station_id}")
+                logger.error(f"⛔ 找不到站點ID: {old_station_id}，請確認json檔案中是否有該站點ID")
                 continue
 
             station_id = station.get('id', None)
@@ -65,7 +69,7 @@ if __name__ == "__main__":
             # 如果該站點不存在於資料庫中，則需要去進行新增
             if not is_exist_station:
                 query.insertStation(station_id, station_name)
-                print(f'✅ 新增站點ID: {station_id} 成功')
+                logger.info(f'✅ 新增站點ID: {station_id} 成功')
             
             # 創建一個Report物件
             report = Report(PATH)
@@ -84,12 +88,13 @@ if __name__ == "__main__":
 
 
             # 取得這個站點有數據的measure_time
-            measure_times = query.selectTideLevelMeasureTime(station_id)
+            measure_times = query.selectTideLevelMeasureTime(station_id, year)
             
 
             # 新增的數據(batch)
             create_datas = list()
-            
+
+
             # 開始進行資料庫寫入
             for _, row in df.iterrows():
 
@@ -108,10 +113,9 @@ if __name__ == "__main__":
                 create_datas.append((station_id, measure_time, level))
 
 
-
             # 如果有新增的數據
             if create_datas:
-                query.batchInsertTideLevels(station_id, create_datas)
-                print(f'✅ 新增 {len(create_datas)} 筆潮高資料成功')
+                query.batchInsertTideLevels(create_datas)
+                logger.info(f'✅ [{station_id} - {station_name}]新增 {len(create_datas)} 筆潮高資料成功')
 
             bar()

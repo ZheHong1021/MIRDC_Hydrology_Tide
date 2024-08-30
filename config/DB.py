@@ -1,9 +1,13 @@
 import pymysql
 import os
 from utils.load_env import load_env
+from logs.logger import setup_logger
 
 # 加載 .env 文件中的環境變數
 load_env()
+
+# 設定 logger
+logger = setup_logger()
 
 
 class DB:
@@ -26,5 +30,5 @@ class DB:
             )
             return db
         except Exception as e:
-            print('連線資料庫失敗: {}'.format(str(e)))
+            logger.error('連線資料庫失敗: {}'.format(str(e)))
         return None
