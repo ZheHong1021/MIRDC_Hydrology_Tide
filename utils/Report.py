@@ -10,7 +10,7 @@ load_env()
 class Report:
     def __init__(self, path):
         self.path = path
-        self.header = os.environ.get('HEADER', 20)
+        self.header = int(os.environ.get('HEADER', 20))
         self.df = None
     
     # 擷取該CSV報表的內容
