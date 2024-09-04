@@ -1,5 +1,4 @@
 import os
-from utils.query import Query
 from utils.load_env import load_env
 from utils.load_stations import load_stations
 from alive_progress import alive_bar
@@ -41,7 +40,7 @@ if __name__ == "__main__":
             # 站點物件
             station = Station(PATH)
 
-            # 檢查檔案名稱並且加入路徑
+            # 檢查檔案名稱並且加入路徑(不通過就跳過)
             if not station.check_filename_and_add_path():
                 continue
 

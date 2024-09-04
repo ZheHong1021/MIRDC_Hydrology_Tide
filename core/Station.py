@@ -1,9 +1,6 @@
 import os
 from core.Report import Report
 from utils.query import Query
-from utils.load_env import load_env
-from utils.load_stations import load_stations
-from alive_progress import alive_bar
 from logs.logger import setup_logger
 
 # 設定 logger
