@@ -1,4 +1,7 @@
 @echo off
+REM 啟動虛擬環境
+call venv\Scripts\activate
+
 REM 執行 auto_crawler.py
 python auto_crawler.py
 IF %ERRORLEVEL% NEQ 0 (
