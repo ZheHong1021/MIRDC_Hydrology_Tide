@@ -1,10 +1,10 @@
 import os
-from utils.Report import Report
 from utils.query import Query
 from utils.load_env import load_env
 from utils.load_stations import load_stations
 from alive_progress import alive_bar
 from logs.logger import setup_logger
+from core.Station import Station
 
 # 設定 logger
 logger = setup_logger()
@@ -19,7 +19,7 @@ if __name__ == "__main__":
     stations_hash_map = load_stations()
 
     # 檔案目錄路徑
-    FOLDER = 'csv'
+    FOLDER = 'save/csv'
     FOLDER_PATH = os.path.join(os.getcwd(), FOLDER)
 
     # 得到該目錄下所有檔案名稱
@@ -29,95 +29,33 @@ if __name__ == "__main__":
     # 一一讀取個檔案資訊
     with alive_bar(len(FILENAMES)) as bar:
         for index, filename in enumerate(FILENAMES):
+            # 檔案路徑
             PATH = os.path.join(FOLDER_PATH, filename)
 
-            # 得到該PATH的副檔名
-            EXTENSION = os.path.splitext(PATH)[-1]
-
-            # 如果副檔名不是.csv就跳過
-            if EXTENSION != '.csv':
-                continue
-
-            # 創建一個Query物件
-            query = Query()
-            
             # 取得該PATH的basename但不要副檔名
             BASENAME = os.path.splitext(os.path.basename(PATH))[0]
 
             print("-----------------------------------------")
             print(f'📁 {index+1}/{len(FILENAMES)} {BASENAME}')
 
-            # 切割變數
-            # ● year: 年份
-            # ● old_station_id: 舊站點ID
-            # ● station_name: 站點名稱
-            # ● type: 站點類型
-            year, old_station_id, station_name, type = BASENAME.split('_')
+            # 站點物件
+            station = Station(PATH)
 
-            # 取得新的站點ID
-            station = stations_hash_map.get(str(old_station_id), None)
-            if station is None:
-                logger.error(f"⛔ 找不到站點ID: {old_station_id}，請確認json檔案中是否有該站點ID")
+            # 檢查檔案名稱並且加入路徑
+            if not station.check_filename_and_add_path():
                 continue
 
-            station_id = station.get('id', None)
-            station_name = station.get('name', None)
+            # 切割檔案名稱取得變數
+            station.split_filename_to_get_parameter()
 
-            # 確定該站點是否存在於資料庫中
-            is_exist_station = query.selectStationID(station_id)
-            
-            # 如果該站點不存在於資料庫中，則需要去進行新增
-            if not is_exist_station:
-                query.insertStation(station_id, station_name)
-                logger.info(f'✅ 新增站點ID: {station_id} 成功')
-            
-            # 創建一個Report物件
-            report = Report(PATH)
+            # 取得或新增新站點的資訊(ID、name)
+            if not station.get_or_create_new_station_information(stations_hash_map):
+                continue
 
-            # 擷取該CSV報表的內容
-            report.fetch_report()
+            # 解析CSV報表 => 回傳DataFrame
+            df = station.parse_csv_report()
 
-            # 添加datetime欄位
-            report.add_measure_time_column()
-
-            # 轉換nan為None
-            report.transfer_nan_to_none()
-
-            # 取得該報表的DataFrame
-            df = report.df
-
-
-            # 取得這個站點有數據的measure_time
-            measure_times = query.selectTideLevelMeasureTime(station_id, year)
-            
-
-            # 新增的數據(batch)
-            create_datas = list()
-
-
-            # 開始進行資料庫寫入
-            for _, row in df.iterrows():
-
-                # 取得潮高
-                level = row[os.environ.get('LEVEL_COLUMN', ':00')] 
-                    
-                # 取得時間
-                measure_time = row['measure_time']
-
-                print(f"[{measure_time}] => {level}")
-
-                # 確定該時間是否已經存在於資料庫中
-                if measure_time in measure_times:
-                    continue # 存在就不用繼續了
-
-
-                # 儲存要新增的數據
-                create_datas.append((station_id, measure_time, level))
-
-
-            # 如果有新增的數據
-            if create_datas:
-                query.batchInsertTideLevels(create_datas)
-                logger.info(f'✅ [{station_id} - {station_name}]新增 {len(create_datas)} 筆潮高資料成功')
+            # 將 dataframe中的數據進行寫入到資料庫
+            station.write_dataframe_to_database(df)
 
             bar()
