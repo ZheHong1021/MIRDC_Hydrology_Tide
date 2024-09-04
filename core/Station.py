@@ -1,6 +1,7 @@
 import os
 from core.Report import Report
 from utils.query import Query
+from utils.decorators import print_exec_time
 from logs.logger import setup_logger
 
 # 設定 logger
@@ -65,6 +66,7 @@ class Station:
     
     
     # 將csv報表中的數據進行解析
+    @print_exec_time
     def parse_csv_report(self):
         # 創建一個Report物件
         report = Report(self.path)
@@ -80,21 +82,26 @@ class Station:
 
         # 取得該報表的DataFrame並回傳
         return report.df
+
     
     # 將 dataframe中的數據進行寫入到資料庫
+    @print_exec_time
     def write_dataframe_to_database(self, df):
         # 取得這個站點有數據的measure_time
-        measure_times = self.query.selectTideLevelMeasureTime(self.station_id, self.year)
+        # 改用 set 來提高查詢效率
+        measure_times = set(self.query.selectTideLevelMeasureTime(self.station_id, self.year))
 
         # 新增的數據(batch)
         create_datas = list()
 
+        # 取得潮高欄位
+        LEVEL_COLUMN = os.environ.get('LEVEL_COLUMN', ':00')
 
         # 開始進行資料庫寫入
         for _, row in df.iterrows():
 
             # 取得潮高
-            level = row[os.environ.get('LEVEL_COLUMN', ':00')] 
+            level = row[LEVEL_COLUMN] 
                 
             # 取得時間
             measure_time = row['measure_time']
@@ -106,7 +113,6 @@ class Station:
 
             # 儲存要新增的數據
             create_datas.append((self.station_id, measure_time, level))
-
 
         # 如果有新增的數據
         if create_datas:
