@@ -35,6 +35,31 @@ DB_HOST=localhost
 DB_PORT=3306
 ```
 
+
+---
+
+## 檔案目錄說明
+### 目錄
+|目錄名稱|說明|
+|-|-|
+|config|相關設定的程式。EX: 資料庫連線|
+|core|主程式中較核心的Class類別|
+|database|會使用到的資料表|
+|json|儲存捕捉站點的資訊|
+|logs|程式執行的日誌|
+|save|下載下來的檔案|
+|utils|常用的functions|
+
+
+### 檔案
+|檔案名稱|說明|
+|-|-|
+|.env.example|環境設定變數|
+|app.py|將下載下來的csv進行資料解析並儲存到資料庫中|
+|auto_crawler.py|將海象資料下載下來並且進行壓縮儲存到save目錄中|
+|requirements.txt|使用到的Python Package|
+|start.bat|一鍵執行指令，先執行auto_crawler.py，再執行app.py|
+
 ---
 
 ## 資料來源
