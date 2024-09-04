@@ -104,6 +104,8 @@ if __name__ == "__main__":
                 # 取得時間
                 measure_time = row['measure_time']
 
+                print(f"[{measure_time}] => {level}")
+
                 # 確定該時間是否已經存在於資料庫中
                 if measure_time in measure_times:
                     continue # 存在就不用繼續了
