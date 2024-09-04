@@ -1,5 +1,5 @@
 import os
-from utils.Report import Report
+from core.Report import Report
 from utils.query import Query
 from utils.load_env import load_env
 from utils.load_stations import load_stations
